@@ -325,7 +325,6 @@ class Database(object):
 
         :rtype: :class:`aiocouchdb.feeds.ChangesFeed`
         """
-        print(locals())
         params = dict(params or {})
         params.update((key, value)
                       for key, value in locals().items()

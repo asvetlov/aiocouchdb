@@ -312,7 +312,6 @@ class SessionTestCase(utils.TestCase):
             self.assert_request_called_with('POST', '_session',
                                             data={'name': 'root',
                                                   'password': 'relax'})
-            print(auth._cookies)
         self.assertIsInstance(auth, aiocouchdb.authn.CookieAuthProvider)
         self.assertIn('AuthSession', auth._cookies)
 

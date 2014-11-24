@@ -53,7 +53,6 @@ class DatabaseTestCase(utils.TestCase, utils.DatabaseEnv):
         with self.response(status=403):
             result = yield from self.db.exists()
             resp = yield from self.db.resource.head()
-            print(resp.status)
             self.assert_request_called_with('HEAD', self.db.name)
         self.assertFalse(result)
 

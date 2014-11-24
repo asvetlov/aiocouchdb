@@ -142,7 +142,7 @@ class HttpRequestTestCase(utils.TestCase):
     def test_encode_readable_object(self):
         req = aiocouchdb.client.HttpRequest(
             'post', self.url, data=io.BytesIO(b'foobarbaz'))
-        self.assertIsInstance(req.body, types.GeneratorType)
+        self.assertIsInstance(req.body, io.IOBase)
 
 
 class HttpResponseTestCase(utils.TestCase):
