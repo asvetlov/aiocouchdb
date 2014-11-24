@@ -61,7 +61,7 @@ class Database(object):
         return self._dbname
 
     @asyncio.coroutine
-    def doc(self, docid=None, *, auth=None, idfun=uuid.uuid4):
+    def doc(self, docid=None, *, auth=None, idfun=uuid.uuid4, **request_options):
         """Returns :class:`~aiocouchdb.document.Document` instance against
         specified document ID.
 
@@ -83,14 +83,14 @@ class Database(object):
         if docid is None:
             docid = str(idfun())
         doc = self[docid]
-        resp = yield from doc.resource.head(auth=auth)
+        resp = yield from doc.resource.head(auth=auth, **request_options)
         if resp.status != 404:
             yield from resp.maybe_raise_error()
         yield from resp.read()
         return doc
 
     @asyncio.coroutine
-    def ddoc(self, docid, *, auth=None):
+    def ddoc(self, docid, *, auth=None, **request_options):
         """Returns :class:`~aiocouchdb.designdoc.DesignDocument` instance
         against specified document ID. This ID may startswith with ``_design/``
         prefix and if it's not prefix will be added automatically.
@@ -107,14 +107,14 @@ class Database(object):
         if not docid.startswith('_design/'):
             docid = '_design/' + docid
         ddoc = self[docid]
-        resp = yield from ddoc.resource.head(auth=auth)
+        resp = yield from ddoc.resource.head(auth=auth, **request_options)
         if resp.status != 404:
             yield from resp.maybe_raise_error()
         yield from resp.read()
         return ddoc
 
     @asyncio.coroutine
-    def exists(self, *, auth=None):
+    def exists(self, *, auth=None, **request_options):
         """Checks if `database exists`_ on server. Assumes success on receiving
         response with `200 OK` status.
 
@@ -124,12 +124,12 @@ class Database(object):
 
         .. _database exists: http://docs.couchdb.org/en/latest/api/database/common.html#head--db
         """
-        resp = yield from self.resource.head(auth=auth)
+        resp = yield from self.resource.head(auth=auth, **request_options)
         yield from resp.read()
         return resp.status == 200
 
     @asyncio.coroutine
-    def info(self, *, auth=None):
+    def info(self, *, auth=None, **request_options):
         """Returns `database information`_.
 
         :param auth: :class:`aiocouchdb.authn.AuthProvider` instance
@@ -138,12 +138,12 @@ class Database(object):
 
         .. _database information: http://docs.couchdb.org/en/latest/api/database/common.html#get--db
         """
-        resp = yield from self.resource.get(auth=auth)
+        resp = yield from self.resource.get(auth=auth, **request_options)
         yield from resp.maybe_raise_error()
         return (yield from resp.json())
 
     @asyncio.coroutine
-    def create(self, *, auth=None):
+    def create(self, *, auth=None, **request_options):
         """`Creates a database`_.
 
         :param auth: :class:`aiocouchdb.authn.AuthProvider` instance
@@ -152,7 +152,7 @@ class Database(object):
 
         .. _Creates a database: http://docs.couchdb.org/en/latest/api/database/common.html#put--db
         """
-        resp = yield from self.resource.put(auth=auth)
+        resp = yield from self.resource.put(auth=auth, **request_options)
         yield from resp.maybe_raise_error()
         status = yield from resp.json()
         return status['ok']
@@ -167,7 +167,7 @@ class Database(object):
 
         .. _Deletes a database: http://docs.couchdb.org/en/latest/api/database/common.html#delete--db
         """
-        resp = yield from self.resource.delete(auth=auth)
+        resp = yield from self.resource.delete(auth=auth, **request_options)
         yield from resp.maybe_raise_error()
         status = yield from resp.json()
         return status['ok']
@@ -189,7 +189,8 @@ class Database(object):
                  stale=None,
                  startkey=...,
                  startkey_docid=None,
-                 update_seq=None):
+                 update_seq=None,
+                 **request_options):
         """Iterates over :ref:`all documents view <api/db/all_docs>`.
 
         :param str keys: List of document ids to fetch. This method is smart
@@ -232,10 +233,11 @@ class Database(object):
         view = self.view_class(self.resource('_all_docs'))
         return (yield from view.request(auth=auth,
                                         feed_buffer_size=feed_buffer_size,
-                                        params=params))
+                                        params=params,
+                                        **request_options))
 
     def bulk_docs(self, docs, *, auth=None, all_or_nothing=None,
-                  new_edits=None):
+                  new_edits=None, **request_options):
         """:ref:`Updates multiple documents <api/db/bulk_docs>` using a single
         request.
 

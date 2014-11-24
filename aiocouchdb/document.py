@@ -41,7 +41,7 @@ class Document(object):
         return self._docid
 
     @asyncio.coroutine
-    def att(self, attname, *, auth=None):
+    def att(self, attname, *, auth=None, **request_options):
         """Returns :class:`~aiocouchdb.attachment.Attachment` instance against
         specified attachment.
 
@@ -55,14 +55,14 @@ class Document(object):
         :rtype: :attr:`aiocouchdb.document.Document.attachment_class`
         """
         att = self[attname]
-        resp = yield from att.resource.head(auth=auth)
+        resp = yield from att.resource.head(auth=auth, **request_options)
         if resp.status != 404:
             yield from resp.maybe_raise_error()
         yield from resp.read()
         return att
 
     @asyncio.coroutine
-    def exists(self, rev=None, *, auth=None):
+    def exists(self, rev=None, *, auth=None, **request_options):
         """Checks if `document exists`_ in the database. Assumes success
         on receiving response with `200 OK` status.
 
@@ -76,12 +76,12 @@ class Document(object):
         params = {}
         if rev is not None:
             params['rev'] = rev
-        resp = yield from self.resource.head(auth=auth, params=params)
+        resp = yield from self.resource.head(auth=auth, params=params, **request_options)
         yield from resp.read()
         return resp.status == 200
 
     @asyncio.coroutine
-    def modified(self, rev, *, auth=None):
+    def modified(self, rev, *, auth=None, **request_options):
         """Checks if `document was modified`_ in database since specified
         revision.
 
@@ -94,12 +94,12 @@ class Document(object):
         """
         qrev = '"%s"' % rev
         resp = yield from self.resource.head(auth=auth,
-                                             headers={'IF-NONE-MATCH': qrev})
+                                             headers={'IF-NONE-MATCH': qrev}, **request_options)
         yield from resp.maybe_raise_error()
         return resp.status != 304
 
     @asyncio.coroutine
-    def rev(self, *, auth=None):
+    def rev(self, *, auth=None, **request_options):
         """Returns current document revision by using `HEAD request`_.
 
         :param auth: :class:`aiocouchdb.authn.AuthProvider` instance
@@ -108,7 +108,7 @@ class Document(object):
 
         .. _HEAD request: http://docs.couchdb.org/en/latest/api/document/common.html#head--db-docid
         """
-        resp = yield from self.resource.head(auth=auth)
+        resp = yield from self.resource.head(auth=auth, **request_options)
         yield from resp.maybe_raise_error()
         return resp.headers['ETAG'].strip('"')
 
@@ -124,7 +124,8 @@ class Document(object):
             meta=None,
             open_revs=None,
             revs=None,
-            revs_info=None):
+            revs_info=None,
+            **request_options):
         """`Returns a document`_ object.
 
         :param str rev: Document revision
@@ -162,7 +163,7 @@ class Document(object):
         if open_revs is not None and open_revs != 'all':
             params['open_revs'] = json.dumps(open_revs)
 
-        resp = yield from self.resource.get(auth=auth, params=params)
+        resp = yield from self.resource.get(auth=auth, params=params, **request_options)
         yield from resp.maybe_raise_error()
         return (yield from resp.json())
 
@@ -172,7 +173,8 @@ class Document(object):
                       att_encoding_info=None,
                       atts_since=None,
                       local_seq=None,
-                      revs=None):
+                      revs=None,
+                      **request_options):
         """Returns document open revisions with their attachments.
 
         Unlike :func:`get(open_revs=[...]) <aiocouchdb.document.Document.get>`,
@@ -211,7 +213,8 @@ class Document(object):
         resp = yield from self.resource.get(auth=auth,
                                             headers={'ACCEPT': 'multipart/*'},
                                             params=params,
-                                            response_class=HttpStreamResponse)
+                                            response_class=HttpStreamResponse,
+                                            **request_options)
         yield from resp.maybe_raise_error()
         reader = OpenRevsMultipartReader.from_response(resp)
         return reader
@@ -226,7 +229,8 @@ class Document(object):
                       local_seq=None,
                       meta=None,
                       revs=None,
-                      revs_info=None):
+                      revs_info=None,
+                      **request_options):
         """Returns document with attachments.
 
         This method is more optimal than :func:`get(attachments=true)
@@ -266,7 +270,8 @@ class Document(object):
             auth=auth,
             headers={'ACCEPT': 'multipart/*, application/json'},
             params=params,
-            response_class=HttpStreamResponse)
+            response_class=HttpStreamResponse,
+            **request_options)
 
         yield from resp.maybe_raise_error()
 
@@ -291,7 +296,7 @@ class Document(object):
         return DocAttachmentsMultipartReader.from_response(resp)
 
     @asyncio.coroutine
-    def update(self, doc, *, auth=None, batch=None, new_edits=None, rev=None):
+    def update(self, doc, *, auth=None, batch=None, new_edits=None, rev=None, **request_options):
         """`Updates a document`_ on server.
 
         :param dict doc: Document object. Should implement
@@ -323,12 +328,12 @@ class Document(object):
                              '%r ; expected: %r. May you want to .copy() it?'
                              % (doc['_id'], self.id))
 
-        resp = yield from self.resource.put(auth=auth, data=doc, params=params)
+        resp = yield from self.resource.put(auth=auth, data=doc, params=params, **request_options)
         yield from resp.maybe_raise_error()
         return (yield from resp.json())
 
     @asyncio.coroutine
-    def delete(self, rev, *, auth=None, preserve_content=None):
+    def delete(self, rev, *, auth=None, preserve_content=None, **request_options):
         """`Deletes a document`_ from server.
 
         By default document will be deleted using `DELETE` HTTP method.
@@ -351,17 +356,17 @@ class Document(object):
         """
         params = {'rev': rev}
         if preserve_content:
-            doc = yield from self.get(rev=rev)
+            doc = yield from self.get(rev=rev, **request_options)
             doc['_deleted'] = True
             resp = yield from self.resource.put(auth=auth, data=doc,
-                                                params=params)
+                                                params=params, **request_options)
         else:
-            resp = yield from self.resource.delete(auth=auth, params=params)
+            resp = yield from self.resource.delete(auth=auth, params=params, **request_options)
         yield from resp.maybe_raise_error()
         return (yield from resp.json())
 
     @asyncio.coroutine
-    def copy(self, newid, rev=None, *, auth=None):
+    def copy(self, newid, rev=None, *, auth=None, **request_options):
         """`Copies a document`_ with the new ID within the same database.
 
         :param str newid: New document ID
@@ -377,7 +382,7 @@ class Document(object):
         if rev is not None:
             dest += '?rev=' + rev
         headers = {'DESTINATION': dest}
-        resp = yield from self.resource.copy(auth=auth, headers=headers)
+        resp = yield from self.resource.copy(auth=auth, headers=headers, **request_options)
         yield from resp.maybe_raise_error()
         return (yield from resp.json())
 
