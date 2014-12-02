@@ -31,7 +31,8 @@ class Server(object):
     def __init__(self, url_or_resource='http://localhost:5984', *,
                  authdb_class=None,
                  authdb_name=None,
-                 database_class=None):
+                 database_class=None,
+                 http_options=None):
         if authdb_class is not None:
             self.authdb_class = authdb_class
         if authdb_name is not None:
@@ -46,6 +47,8 @@ class Server(object):
         self._config = Config(self.resource)
         self._session = Session(self.resource)
 
+        self.http_options = http_options or {}
+
     def __getitem__(self, dbname):
         return self.database_class(self.resource(dbname), dbname=dbname)
 
@@ -56,7 +59,7 @@ class Server(object):
         return self._authdb
 
     @asyncio.coroutine
-    def db(self, dbname, *, auth=None):
+    def db(self, dbname, *, auth=None, **request_options):
         """Returns :class:`~aiocouchdb.database.Database` instance against
         specified database name.
 
@@ -70,7 +73,7 @@ class Server(object):
         :rtype: :attr:`aiocouchdb.server.Server.database_class`
         """
         db = self[dbname]
-        resp = yield from db.resource.head(auth=auth)
+        resp = yield from db.resource.head(auth=auth, **request_options)
         if resp.status != 404:
             yield from resp.maybe_raise_error()
         yield from resp.read()

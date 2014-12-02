@@ -27,7 +27,7 @@ class Attachment(object):
         return self._name
 
     @asyncio.coroutine
-    def exists(self, rev=None, *, auth=None):
+    def exists(self, rev=None, *, auth=None, **request_options):
         """Checks if `attachment exists`_. Assumes success on receiving response
         with `200 OK` status.
 
@@ -41,12 +41,12 @@ class Attachment(object):
         params = {}
         if rev is not None:
             params['rev'] = rev
-        resp = yield from self.resource.head(auth=auth, params=params)
+        resp = yield from self.resource.head(auth=auth, params=params, **request_options)
         yield from resp.read()
         return resp.status == 200
 
     @asyncio.coroutine
-    def modified(self, digest, *, auth=None):
+    def modified(self, digest, *, auth=None, **request_options):
         """Checks if `attachment was modified`_ by known MD5 digest.
 
         :param bytes digest: Attachment MD5 digest. Optionally,
@@ -69,13 +69,13 @@ class Attachment(object):
                             ''.format(type(digest)))
         qdigest = '"%s"' % digest
         resp = yield from self.resource.head(auth=auth,
-                                             headers={'IF-NONE-MATCH': qdigest})
+                                             headers={'IF-NONE-MATCH': qdigest}, **request_options)
         yield from resp.maybe_raise_error()
         yield from resp.read()
         return resp.status != 304
 
     @asyncio.coroutine
-    def accepts_range(self, rev=None, *, auth=None):
+    def accepts_range(self, rev=None, *, auth=None, **request_options):
         """Returns ``True`` if attachments accepts bytes range requests.
 
         :param str rev: Document revision
@@ -86,12 +86,12 @@ class Attachment(object):
         params = {}
         if rev is not None:
             params['rev'] = rev
-        resp = yield from self.resource.head(auth=auth, params=params)
+        resp = yield from self.resource.head(auth=auth, params=params, **request_options)
         yield from resp.read()
         return resp.headers.get('ACCEPT-RANGES') == 'bytes'
 
     @asyncio.coroutine
-    def get(self, rev=None, *, auth=None, range=None):
+    def get(self, rev=None, *, auth=None, range=None, **request_options):
         """`Returns an attachment`_ reader object.
 
         :param str rev: Document revision
@@ -121,7 +121,7 @@ class Attachment(object):
         resp = yield from self.resource.get(auth=auth,
                                             headers=headers,
                                             params=params,
-                                            response_class=HttpStreamResponse)
+                                            response_class=HttpStreamResponse, **request_options)
         yield from resp.maybe_raise_error()
         return AttachmentReader(resp)
 
@@ -130,7 +130,8 @@ class Attachment(object):
                auth=None,
                content_encoding=None,
                content_type='application/octet-stream',
-               rev=None):
+               rev=None,
+               **request_options):
         """`Attaches a file`_ to document.
 
         :param file fileobj: File object, should be readable
@@ -159,12 +160,13 @@ class Attachment(object):
         resp = yield from self.resource.put(auth=auth,
                                             data=fileobj,
                                             headers=headers,
-                                            params=params)
+                                            params=params,
+                                            **request_options)
         yield from resp.maybe_raise_error()
         return (yield from resp.json())
 
     @asyncio.coroutine
-    def delete(self, rev, *, auth=None):
+    def delete(self, rev, *, auth=None, **request_options):
         """`Deletes an attachment`_.
 
         :param str rev: Document revision
@@ -175,7 +177,8 @@ class Attachment(object):
         .. _Deletes an attachment: http://docs.couchdb.org/en/latest/api/document/attachments.html#delete--db-docid-attname
         """
         resp = yield from self.resource.delete(auth=auth,
-                                               params={'rev': rev})
+                                               params={'rev': rev},
+                                               **request_options)
         yield from resp.maybe_raise_error()
         return (yield from resp.json())
 
