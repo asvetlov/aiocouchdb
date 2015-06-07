@@ -237,7 +237,7 @@ class HttpResponse(aiohttp.client.ClientResponse):
             else:
                 self.close()
 
-            self._content = data
+            self._content = bytes(data)
 
         return self._content
 
