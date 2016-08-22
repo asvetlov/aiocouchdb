@@ -172,7 +172,7 @@ def request(method, url, *,
     return resp
 
 
-class HttpRequest(aiohttp.client.ClientRequest):
+class HttpRequest(aiohttp.client_reqrep.ClientRequest):
     """:class:`aiohttp.client.ClientRequest` class with CouchDB specifics."""
 
     #: Default HTTP request headers.
@@ -183,7 +183,7 @@ class HttpRequest(aiohttp.client.ClientRequest):
     }
     CHUNK_SIZE = 8192
 
-    def update_body_from_data(self, data):
+    def update_body_from_data(self, data, skip_auto_headers):
         """Encodes ``data`` as JSON if `Content-Type`
         is :mimetype:`application/json`."""
         if data is None:
@@ -193,7 +193,7 @@ class HttpRequest(aiohttp.client.ClientRequest):
             if not (isinstance(data, non_json_types)):
                 data = json.dumps(data)
 
-        rv = super().update_body_from_data(data)
+        rv = super().update_body_from_data(data, None)
         if isinstance(data, MultipartWriter) and CONTENT_LENGTH in self.headers:
             self.chunked = False
         return rv
@@ -209,7 +209,7 @@ class HttpRequest(aiohttp.client.ClientRequest):
         return super().update_path(params)
 
 
-class HttpResponse(aiohttp.client.ClientResponse):
+class HttpResponse(aiohttp.client_reqrep.ClientResponse):
     """Deviation from :class:`aiohttp.client.ClientResponse` class for
     CouchDB specifics. Prefers :class:`~aiohttp.streams.FlowControlChunksQueue`
     flow control which fits the best to handle chunked responses.

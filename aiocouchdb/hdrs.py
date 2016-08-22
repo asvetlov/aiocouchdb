@@ -8,7 +8,7 @@
 #
 
 from aiohttp.hdrs import *
-from aiohttp.multidict import upstr
+from multidict import upstr
 
 #: Defines CouchDB Proxy Auth username
 X_AUTH_COUCHDB_USERNAME = upstr('X-Auth-CouchDB-UserName')
