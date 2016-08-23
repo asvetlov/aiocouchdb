@@ -7,8 +7,8 @@
 # you should have received as part of this distribution.
 #
 
-from aiohttp.hdrs import *
-from aiohttp.multidict import upstr
+from aiohttp.hdrs import *  # noqa
+from multidict import upstr
 
 #: Defines CouchDB Proxy Auth username
 X_AUTH_COUCHDB_USERNAME = upstr('X-Auth-CouchDB-UserName')

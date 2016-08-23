@@ -13,7 +13,7 @@ import io
 import uuid
 from collections.abc import MutableMapping
 
-from aiohttp.multidict import CIMultiDict
+from multidict import CIMultiDict
 from aiocouchdb.client import Resource
 from aiocouchdb.hdrs import (
     ACCEPT,

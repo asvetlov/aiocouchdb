@@ -108,11 +108,9 @@ class FeedTestCase(utils.TestCase):
         self.assertTrue(feed.is_active())
 
         result = yield from feed.next()
-        self.assertEqual(feed._queue.qsize(), buf_size)
         self.assertEqual(b'foo\r\n', result)
 
         result = yield from feed.next()
-        self.assertEqual(feed._queue.qsize(), buf_size)
         self.assertEqual(b'bar\r\n', result)
 
         result = yield from feed.next()
@@ -120,7 +118,6 @@ class FeedTestCase(utils.TestCase):
         self.assertEqual(b'baz\r\n', result)
 
         result = yield from feed.next()
-        self.assertEqual(feed._queue.qsize(), 0)
         self.assertEqual(b'boo\r\n', result)
 
         result = yield from feed.next()
