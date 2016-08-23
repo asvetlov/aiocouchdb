@@ -172,7 +172,7 @@ def request(method, url, *,
     return resp
 
 
-class HttpRequest(aiohttp.client_reqrep.ClientRequest):
+class HttpRequest(aiohttp.ClientRequest):
     """:class:`aiohttp.client.ClientRequest` class with CouchDB specifics."""
 
     #: Default HTTP request headers.
@@ -209,7 +209,7 @@ class HttpRequest(aiohttp.client_reqrep.ClientRequest):
         return super().update_path(params)
 
 
-class HttpResponse(aiohttp.client_reqrep.ClientResponse):
+class HttpResponse(aiohttp.ClientResponse):
     """Deviation from :class:`aiohttp.client.ClientResponse` class for
     CouchDB specifics. Prefers :class:`~aiohttp.streams.FlowControlChunksQueue`
     flow control which fits the best to handle chunked responses.
