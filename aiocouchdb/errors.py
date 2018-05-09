@@ -48,7 +48,7 @@ __all__ = (
 )
 
 
-class HttpErrorException(aiohttp.errors.HttpProcessingError):
+class HttpErrorException(aiohttp.client_exceptions.ClientResponseError):
     """Extension of :exc:`aiohttp.errors.HttpErrorException` for CouchDB related
     errors."""
 
@@ -57,7 +57,7 @@ class HttpErrorException(aiohttp.errors.HttpProcessingError):
 
     def __init__(self, error, reason, headers=None):
         self.error = error
-        self.reason = reason
+        self.message = reason
         self.headers = headers
 
     def __str__(self):
